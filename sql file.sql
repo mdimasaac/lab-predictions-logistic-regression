@@ -17,7 +17,8 @@ select distinct f.film_id, f.title, r.rental_date,
 f.rental_rate, r.return_date, i.inventory_id, f.length
 from film f join inventory i on i.film_id = f.film_id
 join rental r on r.inventory_id = i.inventory_id
-where date_format((r.rental_date), "%Y") = 2005;
+where date_format((r.rental_date), "%Y") = 2005
+order by r.rental_date desc;
 
 -- 1.2
 select count(f.film_id), f.title, r.rental_date, 
@@ -47,12 +48,21 @@ join rental r on r.inventory_id = i.inventory_id
 where date_format((r.rental_date), "%Y") = 2005
 group by f.title order by r.rental_date desc;
 
--- 2
+-- 1.4
+select count(f.film_id), f.title, r.rental_date, 
+f.rental_rate, r.return_date, i.inventory_id, f.length
+from film f
+join inventory i on i.film_id = f.film_id
+join rental r on r.inventory_id = i.inventory_id
+where date_format((r.rental_date), "%Y") = 2005 and
+date_format((r.rental_date), "%m") < 8
+group by f.title order by r.rental_date asc;
+-- 2 all in may
 select distinct f.title, case when
 (
 sum(
 case
-when date_format((r.rental_date), "%M") = "May" and
+when date_format((r.rental_date), "%m") = 5 and
 date_format((r.rental_date), "%Y") = 2005 then True
 else False
 end 
@@ -62,6 +72,8 @@ end
 from film f
 join inventory i on i.film_id = f.film_id
 join rental r on r.inventory_id = i.inventory_id
+where date_format((r.rental_date), "%m") = 5
+and date_format((r.rental_date), "%Y") = 2005
 group by f.title;
 -- where i.inventory_id in
 -- (
@@ -70,8 +82,69 @@ group by f.title;
 -- date_format((r.rental_date), "%Y") = 2005
 -- );
 
+-- 2.2 all in august
+select distinct f.title, case when
+(
+sum(
+case
+when date_format((r.rental_date), "%m") = 6 and
+date_format((r.rental_date), "%Y") = 2005 then True
+else False
+end 
+)
+) >= 1 then 1 else 0 end as rented_in_may_2005
+
+from film f
+join inventory i on i.film_id = f.film_id
+join rental r on r.inventory_id = i.inventory_id
+-- where date_format((r.rental_date), "%m") = 6
+-- and date_format((r.rental_date), "%Y") = 2005
+group by f.title;
+
+
 -- 3
-select distinct f.film_id, f.title, r.rental_date, 
+select count(f.film_id), f.title, r.rental_date, 
+f.rental_rate, r.return_date, i.inventory_id, f.length,
+case when
+(
+sum(
+case
+when date_format((r.rental_date), "%M") = "June" and
+date_format((r.rental_date), "%Y") = 2005 then True
+else False
+end 
+)
+) >= 1 then 1 else 0 end as rented_in_june_2005
+from film f
+join inventory i on i.film_id = f.film_id
+join rental r on r.inventory_id = i.inventory_id
+where date_format((r.rental_date), "%M") = "June"
+and date_format((r.rental_date), "%Y") = 2005
+group by f.title order by r.rental_date desc;
+
+-- 3.2
+select count(f.film_id), f.title, r.rental_date, 
+f.rental_rate, r.return_date, i.inventory_id, f.length,
+case when
+(
+sum(
+case
+when date_format((r.rental_date), "%M") = "June" and
+date_format((r.rental_date), "%Y") = 2005 then True
+else False
+end 
+)
+) >= 1 then 1 else 0 end as rented_in_june_2005
+from film f
+join inventory i on i.film_id = f.film_id
+join rental r on r.inventory_id = i.inventory_id
+where date_format((r.rental_date), "%M") = "June"
+and date_format((r.rental_date), "%Y") = 2005
+group by f.title order by r.rental_date desc;
+
+
+-- 1. FINAL
+select count(f.film_id), f.title, r.rental_date, 
 f.rental_rate, r.return_date, i.inventory_id, f.length,
 case when
 (
@@ -82,9 +155,10 @@ date_format((r.rental_date), "%Y") = 2005 then True
 else False
 end 
 )
-) >= 1 then 1 else 0 end as rented_in_may_2005
-
+) >= 1 then 1 else 0 end as rented_in_june_2005
 from film f
 join inventory i on i.film_id = f.film_id
 join rental r on r.inventory_id = i.inventory_id
-group by f.title;
+where date_format((r.rental_date), "%M") = "May"
+and date_format((r.rental_date), "%Y") = 2005
+group by f.title order by r.rental_date desc;
